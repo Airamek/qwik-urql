@@ -1,4 +1,4 @@
-import { $, useResource$, useStore, useSignal, useContext, useVisibleTask$ } from '@builder.io/qwik';
+import { $, useResource$, useStore, useSignal, useContext, useVisibleTask$, QRL } from '@builder.io/qwik';
 import { pipe, subscribe } from 'wonka';
 import { isServer } from '@builder.io/qwik/build';
 import { AnyVariables, OperationContext, TypedDocumentNode } from '@urql/core';
@@ -26,7 +26,7 @@ export function useSubscription(
        
         //transfer subscription to the browser
 		useVisibleTask$(async ({cleanup}) => {
-            let [client, query] = await Promise.all([
+            const [client, query] = await Promise.all([
                 clientCache.getClient({
                   factory: clientStore.factory,
                   qwikStore,
@@ -46,9 +46,6 @@ export function useSubscription(
                      setTimeout(() => {}, 10)
                 })
             );
-            cleanup(() => {
-                if(unsubscribe) unsubscribe();
-            })
 		});
 
 		return useResource$(async (ctx) => {
@@ -56,7 +53,7 @@ export function useSubscription(
 			if (isServer) {
 				ctx.track(() => track.value)
                 
-				let [client, query] = await Promise.all([
+				const [client, query] = await Promise.all([
                     clientCache.getClient({
                       factory: clientStore.factory,
                       qwikStore,
@@ -66,9 +63,9 @@ export function useSubscription(
                     queryQrl(),
                   ]);
 
-                const result = await new Promise(resolve => {
+                const result: any = await new Promise(resolve => {
 					unsubscribe = pipe(
-						client.subscription(query),
+						client.subscription(query, {}),
 						subscribe(result => {
 							resolve(result); // { data: ... }
 						})
@@ -82,5 +79,5 @@ export function useSubscription(
             
 			//console.log(`result = ${JSON.stringify(result)}`);
 			return output;
-		}, () => unsubscribe());
+		});
 	}

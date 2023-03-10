@@ -3,7 +3,6 @@ import style from './formstyle.css?inline';
 import { gql } from '@urql/core';
 import { useMutation } from '~/hooks/use-mutation.ts';
 import { useSubscription } from '~/hooks/use-subscription.ts';
-import { useQuery } from '~/hooks/use-query';
 
 export const ADD_USER = gql`
 mutation MyMutation($name: String!, $email: String!, $tel : String!) {
@@ -20,7 +19,7 @@ export const AddUserMutation = $(() => ADD_USER)
 export const Dataform = component$(() => {
     useStyles$(style);
     const initialVars = useStore({})
-    const { data, errors, loading, mutate$ } = useMutation(AddUserMutation, initialVars);
+    const { mutate$ } = useMutation(AddUserMutation, initialVars);
     return (
         <div>
             <form id="dataform">
@@ -32,7 +31,7 @@ export const Dataform = component$(() => {
                 <input type="text" name="tel"/>
                 <input type="submit" value="nyomjad" preventdefault:click 
                 // This will prevent the default behavior of the "click" event.
-                onClick$={(event) => {
+                onClick$={() => {
                     const usrFrom = new FormData(document.querySelector("#dataform"));
                     console.log("happens");
                     mutate$({
@@ -59,7 +58,8 @@ subscription getUsers {
 export const GetUserSub = $(() => GET_USERS)
 
 export default component$(() => {
-    const items = useSubscription(GetUserSub);
+    const vars = useStore({})
+    const items = useSubscription(GetUserSub, vars);
     // const items = useResource$(() => {
     //     return Promise(() => undefined);
     // });
@@ -82,7 +82,7 @@ export default component$(() => {
                                 <th>Phone</th>
                             </tr>
                             {
-                            recived.data.testdata.sort((a, b) => (a.id > b.id) ? 1 : -1).map((user) => {
+                            recived.data.testdata.sort((a: any, b: any) => (a.id > b.id) ? 1 : -1).map((user) => {
                                 return (
                                 <tr>
                                     <td>{user.id}</td>
