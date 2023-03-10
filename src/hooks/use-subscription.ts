@@ -1,6 +1,7 @@
-import { useResource$, useStore, useSignal, useContext, useVisibleTask$ } from '@builder.io/qwik';
+import { $, useResource$, useStore, useSignal, useContext, useVisibleTask$ } from '@builder.io/qwik';
 import { pipe, subscribe } from 'wonka';
 import { isServer } from '@builder.io/qwik/build';
+import { AnyVariables, OperationContext, TypedDocumentNode } from '@urql/core';
 import {
     UrqlAuthContext,
     UrqlClientContext,
@@ -11,16 +12,29 @@ import {
 import { clientCache } from '../client/client-cache';
 
 
-export function useSubscription(query) {
-        let output = useStore({data: {}}, {recursive: true});
+
+export function useSubscription(
+    queryQrl: QRL<() => TypedDocumentNode<Data, Variables> & { kind: string;}>,
+    Vars?: Partial<Variables>) {
+        const output = useStore({data: {}}, {deep: true});
 		const clientStore = useContext(UrqlClientContext);
         const qwikStore = useContext(UrqlQwikContext);
         const tokens = useContext(UrqlAuthContext);
 
-		let track = useSignal(false);
+		const track = useSignal(false);
 
+       
         //transfer subscription to the browser
 		useVisibleTask$(async ({cleanup}) => {
+            let [client, query] = await Promise.all([
+                clientCache.getClient({
+                  factory: clientStore.factory,
+                  qwikStore,
+                  authTokens: tokens,
+                  id: clientStore.id,
+                }),
+                queryQrl(),
+              ]);
             const unsubscribe = pipe(
                 client.subscription(query),
                 subscribe(result => {
@@ -38,12 +52,20 @@ export function useSubscription(query) {
 		});
 
 		return useResource$(async (ctx) => {
-			
             let unsubscribe;
 			if (isServer) {
 				ctx.track(() => track.value)
                 
-				
+				let [client, query] = await Promise.all([
+                    clientCache.getClient({
+                      factory: clientStore.factory,
+                      qwikStore,
+                      authTokens: tokens,
+                      id: clientStore.id,
+                    }),
+                    queryQrl(),
+                  ]);
+
                 const result = await new Promise(resolve => {
 					unsubscribe = pipe(
 						client.subscription(query),

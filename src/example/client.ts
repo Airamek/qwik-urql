@@ -19,7 +19,8 @@ const wsClient = createWSClient({
 });
 
 
-export const clientFactory: ClientFactory = createClient({
+export const clientFactory: ClientFactory = () => {
+  return createClient({
       url: 'http://localhost:8080/v1/graphql',
       exchanges: [
         dedupExchange,
@@ -41,4 +42,6 @@ export const clientFactory: ClientFactory = createClient({
           headers: { "x-hasura-admin-secret": "devsecret" },
         };
       },
-    });
+    })};
+
+

@@ -3,6 +3,7 @@ import style from './formstyle.css?inline';
 import { gql } from '@urql/core';
 import { useMutation } from '~/hooks/use-mutation.ts';
 import { useSubscription } from '~/hooks/use-subscription.ts';
+import { useQuery } from '~/hooks/use-query';
 
 export const ADD_USER = gql`
 mutation MyMutation($name: String!, $email: String!, $tel : String!) {
@@ -55,8 +56,13 @@ subscription getUsers {
     }
 }`;
 
+export const GetUserSub = $(() => GET_USERS)
+
 export default component$(() => {
-    const items = useSubscription(GET_USERS);
+    const items = useSubscription(GetUserSub);
+    // const items = useResource$(() => {
+    //     return Promise(() => undefined);
+    // });
     return (
         <>
             <div class="form-cont">
