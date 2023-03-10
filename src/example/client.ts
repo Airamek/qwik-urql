@@ -1,79 +1,44 @@
-import { createClient, dedupExchange, makeOperation } from '@urql/core';
+import { createClient, dedupExchange, fetchExchange, subscriptionExchange } from '@urql/core';
 import { authExchange } from '@urql/exchange-auth';
 import { executeExchange } from '@urql/exchange-execute';
-import {
-  cacheExchange,
-  OptimisticMutationConfig,
-} from '@urql/exchange-graphcache';
-import { qwikExchange } from '../exchange/qwik-exchange';
+import { cacheExchange } from '@urql/exchange-graphcache';
 import { ClientFactory, UrqlAuthTokens } from '../types';
-import { rootValue, schema } from './api';
+import { WebSocket } from 'ws';
+import { createClient as createWSClient } from 'graphql-ws';
+import { isServer } from '@builder.io/qwik/build';
 
-export const clientFactory: ClientFactory = ({ authTokens, qwikStore }) => {
-  const auth = authExchange<UrqlAuthTokens>({
-    getAuth: async ({ authState }) => {
-      if (!authState) {
-        if (authTokens) {
-          return authTokens;
-        }
 
-        return null;
-      }
+const wsClient = createWSClient({
+  webSocketImpl: (isServer ? WebSocket : undefined),
+  url: 'ws://localhost:8080/v1/graphql',
+  connectionParams: async () => {
+    return {
+      headers: { "x-hasura-admin-secret": "devsecret" }
+    };
+  },
+});
 
-      return null;
-    },
-    willAuthError: ({ authState }) => {
-      if (!authState) return true;
-      return false;
-    },
-    addAuthToOperation: ({ authState, operation }) => {
-      if (!authState || !authState.token) {
-        return operation;
-      }
 
-      const fetchOptions =
-        typeof operation.context.fetchOptions === 'function'
-          ? operation.context.fetchOptions()
-          : operation.context.fetchOptions || {};
-
-      return makeOperation(operation.kind, operation, {
-        ...operation.context,
-        fetchOptions: {
-          ...fetchOptions,
-          headers: {
-            ...fetchOptions.headers,
-            Authorization: authState.token,
-          },
-        },
-      });
-    },
-    didAuthError: ({ error }) => {
-      return error.graphQLErrors.some(
-        (e) => e.extensions?.code === 'FORBIDDEN'
-      );
-    },
-  });
-
-  const optimistic: OptimisticMutationConfig = {
-    updateFilm(args: { input: { id: string } }) {
-      return {
-        __typename: 'Film',
-        id: args.input.id,
-        title: '---- optimistic response ----',
-      };
-    },
-  };
-
-  return createClient({
-    url: 'http://localhost:3000/graphql',
-    exchanges: [
-      qwikExchange({ cache: qwikStore, optimistic }),
-      dedupExchange,
-      cacheExchange({ optimistic }),
-      auth,
-
-      // Replace with fetchExchange for live requests
-      executeExchange({ schema, rootValue }),
-    ],
-  });
-};
+export const clientFactory: ClientFactory = createClient({
+      url: 'http://localhost:8080/v1/graphql',
+      exchanges: [
+        dedupExchange,
+        cacheExchange({}),
+        fetchExchange,
+        subscriptionExchange({
+          forwardSubscription: (operation) => ({
+            subscribe: (sink) => ({
+              unsubscribe: wsClient.subscribe(
+                { query: operation.query, variables: operation.variables },
+                sink
+              ),
+            }),
+          }),
+        }),
+      ],
+      fetchOptions: () => {
+        return {
+          headers: { "x-hasura-admin-secret": "devsecret" },
+        };
+      },
+    });

@@ -6,8 +6,8 @@ import { Cache } from './exchange/qwik-exchange';
 export type UrqlAuthTokens = { token?: string; refresh?: string };
 
 export type UrqlOptions = {
-  // Se the default watch behaviour.
-  watch?: boolean;
+	// Se the default watch behaviour.
+	watch?: boolean;
 };
 
 /**
@@ -15,25 +15,30 @@ export type UrqlOptions = {
  * can be used with the qwikExchange and an auth token which can be used by the
  * authExchange to pass a bearer token with requests
  */
-export type ClientFactory = (props: {
-  authTokens?: UrqlAuthTokens;
-  qwikStore: Cache;
-}) => Client;
+// export type ClientFactory = (props: {
+//   authTokens?: UrqlAuthTokens;
+//   qwikStore: Cache;
+// }) => Client;
+
+export interface ClientFactory extends Client {
+    authTokens?: UrqlAuthTokens;
+    qwikStore: Cache;
+}
 
 export type ClientStore = {
-  id: number;
-  factory: QRL<ClientFactory>;
+	id: number;
+	factory: QRL<ClientFactory>;
 };
 
 /** Urql errors in a serializable format */
 export type CombinedError = {
-  name: string;
-  message: string;
-  graphQLErrors: GraphQLFormattedError[];
-  networkError?: {
-    name: string;
-    message: string;
-    stack?: string;
-  };
-  response?: any;
+	name: string;
+	message: string;
+	graphQLErrors: GraphQLFormattedError[];
+	networkError?: {
+		name: string;
+		message: string;
+		stack?: string;
+	};
+	response?: any;
 };
