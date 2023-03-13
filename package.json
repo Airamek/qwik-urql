@@ -5,7 +5,7 @@
   "scripts": {
     "build": "qwik build",
     "build.lib": "vite build --mode lib",
-    "build.types": "tsc --emitDeclarationOnly --declaration",
+    "build.types": "tsc --emitDeclarationOnly",
     "dev": "vite --mode ssr",
     "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
     "fmt": "prettier --write .",
@@ -88,6 +88,8 @@
   "dependencies": {
     "@builder.io/qwik": "^0.21.0",
     "graphql-ws": "^5.12.0",
+    "rollup-plugin-typescript2": "^0.34.1",
+    "vite-plugin-dts": "^2.1.0",
     "ws": "^8.12.1"
   }
 }

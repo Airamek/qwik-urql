@@ -1,26 +1,27 @@
 #dataform {
-    display: grid;
-    grid-template-columns: 10em 10em;
-    grid-gap: 1em;
-    
+  display: grid;
+  grid-template-columns: 10em 10em;
+  grid-gap: 1em;
 }
 
 .form-cont {
-    width: 50%;
-    margin: auto;
+  width: 50%;
+  margin: auto;
 }
 
-.users, .users td, .users tr {
-    border: 1px solid black;
-    border-radius: 3px;
-    padding: 5px;
+.users,
+.users td,
+.users tr {
+  border: 1px solid black;
+  border-radius: 3px;
+  padding: 5px;
 }
 
 .users {
-    width: 100%;
+  width: 100%;
 }
 
 .users-cont {
-    width: 50%;
-    margin: 15px auto;
+  width: 50%;
+  margin: 15px auto;
 }
